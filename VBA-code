@@ -1,0 +1,156 @@
+ Sub Stock_Market_Analysis()
+  ' Set CurrentWs as a worksheet object variable.
+    Dim CurrentWs As Worksheet
+  
+    ' Loop through all of the worksheets in the active workbook.
+    For Each CurrentWs In Worksheets
+    
+        'Variable Declarations
+        Dim ticker As String
+        ticker = " "
+        
+        'Varaible for Ticker into Summary Table
+        Dim stock_volume As Double
+         stock_volume = 0
+        
+        'Variables for Yearly Change
+        Dim open_price As Double
+        open_price = 0
+        Dim close_price As Double
+        close_price = 0
+        Dim delta_price As Double
+        delta_price = 0
+        Dim delta_percent As Double
+        delta_percent = 0
+        
+        '----------------------------------------------------------------
+        'Summary Table
+        Dim summary_table As Long
+        summary_table = 2
+        Dim max_ticker_increase As String
+        max_ticker_increase = " "
+        Dim max_ticker_decrease As String
+        max_ticker_decrease = " "
+        Dim max_percent As Double
+        max_percent = 0
+        Dim min_percent As Double
+        min_percent = 0
+        Dim max_ticker_volume As String
+        max_ticker_volume = " "
+        Dim total_volume As Double
+        total_volume = 0
+        
+        'Set initial row count for the current worksheet
+        Dim lastrow As Long
+        Dim i As Long
+        
+        lastrow = CurrentWs.Cells(Rows.Count, 1).End(xlUp).Row
+
+            ' Column Headers
+            CurrentWs.Range("I1").Value = "Ticker"
+            CurrentWs.Range("J1").Value = "Yearly Change"
+            CurrentWs.Range("K1").Value = "Percent Change"
+            CurrentWs.Range("L1").Value = "Total Stock Volume"
+            CurrentWs.Range("P1").Value = "Ticker"
+            CurrentWs.Range("Q1").Value = "Value"
+            'Summary Table
+            CurrentWs.Range("O2").Value = "Greatest % Increase"
+            CurrentWs.Range("O3").Value = "Greatest % Decrease"
+            CurrentWs.Range("O4").Value = "Greatest Total Volume"
+
+        
+        ' Set initial value of Open Price for the first Ticker of CurrentWs,
+        ' The rest ticker's open price will be initialized within the for loop below
+        open_price = CurrentWs.Cells(2, 3).Value
+        
+        'Loop entire rows in worksheet
+        For i = 2 To lastrow
+        
+      
+            ' Check if we are still within the same ticker name,
+            ' if not - write results to summary table
+        If CurrentWs.Cells(i + 1, 1).Value <> CurrentWs.Cells(i, 1).Value Then
+            
+        'Set the ticker name, we are ready to insert this ticker name data
+        ticker = CurrentWs.Cells(i, 1).Value
+        
+        '----------------------------------------------------------------
+        'Calculting Yearly Change
+        
+        'Calculate Delta_Price and Delta_Percent
+            close_price = CurrentWs.Cells(i, 6).Value
+            delta_price = close_price - open_price
+            'Check Division by 0 condition
+            If open_price <> 0 Then
+                delta_percent = (delta_price / open_price) * 100
+            'Default 0
+            Else
+            delta_price = 0
+            delta_percent = 0
+            End If
+                
+                ' Add to the stock's total volume
+                stock_volume = stock_volume + CurrentWs.Cells(i, 7).Value
+              
+                
+                'Column I - Ticker
+                CurrentWs.Range("I" & summary_table).Value = ticker
+                'Column J - Yearly Change
+                CurrentWs.Range("J" & summary_table).Value = delta_price
+                
+                'Conditional formatting to determine increase or decrease in price
+                'Fill column with GREEN color - good
+                If (delta_price > 0) Then
+                    CurrentWs.Range("J" & summary_table).Interior.ColorIndex = 4
+                'Fill column with RED color - bad
+                ElseIf (delta_price <= 0) Then
+                    CurrentWs.Range("J" & summary_table).Interior.ColorIndex = 3
+                End If
+                
+                 'Column K - Percent Change
+                 'Must convert percentages to String conversion
+                CurrentWs.Range("K" & summary_table).Value = (CStr(delta_percent) & "%")
+                'Column L - Totak Stock Volume
+                CurrentWs.Range("L" & summary_table).Value = stock_volume
+                
+                ' Add 1 to the summary table row count
+                summary_table = summary_table + 1
+                ' Dummy delta_price
+                delta_price = 0
+                close_price = 0
+                ' Capture next Ticker's Open_Price
+                open_price = CurrentWs.Cells(i + 1, 3).Value
+              
+                ' Calculating Greatest % Increase
+                If (delta_percent > max_percent) Then
+                    max_percent = delta_percent
+                    max_ticker_increase = ticker
+                'Calculating Greatest % Decrease
+                ElseIf (delta_percent < min_percent) Then
+                    min_percent = delta_percent
+                    max_ticker_decrease = ticker
+                End If
+                
+                'Calculating Total Stock Volume
+                If (stock_volume > total_volume) Then
+                    total_volume = stock_volume
+                    max_ticker_volume = ticker
+                End If
+                
+            Else
+                ' Increase the stock_volume
+                 stock_volume = stock_volume + CurrentWs.Cells(i, 7).Value
+            End If
+            
+        Next i
+                CurrentWs.Range("Q2").Value = (CStr(max_percent) & "%")
+                CurrentWs.Range("Q3").Value = (CStr(min_percent) & "%")
+                CurrentWs.Range("P2").Value = max_ticker_increase
+                CurrentWs.Range("P3").Value = max_ticker_decrease
+                CurrentWs.Range("Q4").Value = total_volume
+                CurrentWs.Range("P4").Value = max_ticker_volume
+        
+     Next CurrentWs
+
+
+End Sub
